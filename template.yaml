@@ -1,0 +1,106 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Automate MySQL data export to S3
+
+Resources:
+  MyS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: vita66
+
+  MySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: mysql-credentials
+      SecretString: !Sub |
+        {
+          "host": "your-mysql-host",
+          "username": "your-username",
+          "password": "your-password",
+          "database": "your-database"
+        }
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [lambda.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      Policies:
+        - PolicyName: LambdaS3MySQLPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: 
+                  - 's3:PutObject'
+                  - 's3:GetObject'
+                Resource: !Sub 'arn:aws:s3:::${MyS3Bucket}/*'
+              - Effect: Allow
+                Action: 
+                  - 'rds-db:connect'
+                  - 'rds:*'  # Be specific in production
+                Resource: '*'  # Be specific to your RDS resource ARN in production
+              - Effect: Allow
+                Action:
+                  - 'secretsmanager:GetSecretValue'
+                Resource: !Ref MySecret
+
+  MyLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import pymysql
+          import boto3
+          from io import StringIO
+          import json
+
+          def lambda_handler(event, context):
+              # Retrieve secrets
+              secret_name = 'mysql-credentials'
+              region_name = 'your-region'
+
+              # Create a Secrets Manager client
+              client = boto3.client('secretsmanager', region_name=region_name)
+
+              # Get the secret value
+              get_secret_value_response = client.get_secret_value(SecretId=secret_name)
+              secret = json.loads(get_secret_value_response['SecretString'])
+
+              # MySQL connection setup
+              connection = pymysql.connect(
+                  host=secret['host'],
+                  user=secret['username'],
+                  password=secret['password'],
+                  db=secret['database']
+              )
+              cursor = connection.cursor()
+
+              # Execute query
+              cursor.execute("SELECT * FROM your_table")
+              result = cursor.fetchall()
+
+              # CSV output
+              csv_data = StringIO()
+              [csv_data.write(','.join(map(str, row)) + '\n') for row in result]
+              csv_data.seek(0)
+
+              # S3 upload
+              s3 = boto3.client('s3')
+              s3.put_object(Bucket='vita66', Key='data.csv', Body=csv_data.getvalue())
+
+              cursor.close()
+              connection.close()
+
+              return {
+                  'statusCode': 200,
+                  'body': 'Data successfully uploaded to S3'
+              }
+      Runtime: python3.8
+      Timeout: 300
