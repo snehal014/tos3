@@ -11,7 +11,8 @@ Resources:
     Type: AWS::SecretsManager::Secret
     Properties:
       Name: mysql-credentials
-      SecretString: !Sub | {
+      SecretString: !Sub |
+      {
           "host": "your_mysql_host",
           "username": "your_username",
           "password": "your_password",
