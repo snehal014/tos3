@@ -31,6 +31,10 @@ jobs:
             --template-file template.yaml \
             --stack-name my-s3-stack \
             --capabilities CAPABILITY_NAMED_IAM
+            
+      - name: describe stack     
+        run: 
+          aws cloudformation describe-stack-events --stack-name my-s3-stack
 
       - name: Export SQL data to CSV
         run: |
@@ -47,5 +51,6 @@ jobs:
 
       - name: Upload CSV to S3
         run: |
-          echo "Uploading CSV to S3"
-          aws s3 cp data.csv s3://vita66/
+           echo "Uploading CSV to S3"
+             aws s3 cp data.csv s3://my-sql-data-bucket-unique-suffix/
+
