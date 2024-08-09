@@ -13,10 +13,10 @@ Resources:
       Name: mysql-credentials
       SecretString: !Sub |
         {
-          "host": "your-mysql-host",
-          "username": "your-username",
-          "password": "your-password",
-          "database": "your-database"
+          "host": "your_mysql_host",
+          "username": "your_username",
+          "password": "your_password",
+          "database": "your_database"
         }
 
   LambdaExecutionRole:
