@@ -1,38 +1,37 @@
-name: Create an S3 Bucket
+name: Deploy to AWS
+
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
-  Deployment:
-    name: Create S3 Bucket
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout the code
-        uses: actions/checkout@v1
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - uses: actions/setup-python@v2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          python-version: '3.7'
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: us-east-1
 
-      - name: Install dependencies
+      - name: Deploy CloudFormation stack
         run: |
-          python -m pip install --upgrade pip
-          pip install awscli
+          aws cloudformation deploy \
+            --template-file template.yaml \
+            --stack-name my-s3-stack
 
-      - name: Validate CloudFormation template
-        run: aws cloudformation validate-template --template-body file://template.yaml
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
-          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+      - name: Export SQL data
+        run: |
+          # Add your script here to export SQL data to a file
+          # For example, use pg_dump for PostgreSQL or mysqldump for MySQL
+          echo "Exporting SQL data"
 
-      - name: Create CloudFormation stack
-        run: aws cloudformation create-stack --stack-name s3-example --template-body file://template.yaml --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
-          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+      - name: Upload data to S3
+        run: |
+          aws s3 cp C:\Users\DELL\Downloads\rawdata.csv s3://vita66/
