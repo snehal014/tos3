@@ -12,7 +12,7 @@ Resources:
     Properties:
       Name: mysql-credentials
       SecretString: !Sub |
-      {
+       {
           "host": "your_mysql_host",
           "username": "your_username",
           "password": "your_password",
