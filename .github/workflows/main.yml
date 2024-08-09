@@ -26,5 +26,4 @@ jobs:
           aws cloudformation deploy \
             --template-file template.yaml \
             --stack-name my-stack-name \
-            --capabilities CAPABILITY_NAMED_IAM \
-            --region ${{ secrets.AWS_REGION }}  # Optional
+            --capabilities CAPABILITY_NAMED_IAM 
