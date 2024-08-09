@@ -26,11 +26,12 @@ jobs:
 
       - name: Create CloudFormation stack
         run: |
-          echo "Creating CloudFormation stack"
-          aws cloudformation deploy \
-            --template-file template.yaml \
-            --stack-name my-s3-stack \
-            --capabilities CAPABILITY_NAMED_IAM
+           echo "Creating CloudFormation stack"
+           aws cloudformation create-stack \
+           --template-body file://template.yaml \
+           --stack-name my-s3-stack \
+           --capabilities CAPABILITY_NAMED_IAM
+
 
       - name: Check CloudFormation stack status
         run: |
