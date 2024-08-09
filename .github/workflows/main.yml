@@ -19,19 +19,33 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           aws-region: us-east-1
+          aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
 
-      - name: Deploy CloudFormation stack
+      - name: Install MySQL client
+        run: sudo apt-get install -y mysql-client
+
+      - name: Create CloudFormation stack
         run: |
+          echo "Creating CloudFormation stack"
           aws cloudformation deploy \
             --template-file template.yaml \
-            --stack-name my-s3-stack
+            --stack-name my-s3-stack \
+            --capabilities CAPABILITY_NAMED_IAM
 
-      - name: Export SQL data
+      - name: Export SQL data to CSV
         run: |
-          # Add your script here to export SQL data to a file
-          # For example, use pg_dump for PostgreSQL or mysqldump for MySQL
-          echo "Exporting SQL data"
+          echo "Exporting SQL data to CSV"
+          mysql --host=${{ secrets.DB_HOST }} \
+                --port=${{ secrets.DB_PORT }} \
+                --user=${{ secrets.DB_USER }} \
+                --password=${{ secrets.DB_PASSWORD }} \
+                --database=${{ secrets.DB_NAME }} \
+                --execute="SELECT * FROM data" \
+                --batch --quick \
+                --skip-column-names \
+                --raw > data.csv
 
-      - name: Upload data to S3
+      - name: Upload CSV to S3
         run: |
-          aws s3 cp C:\Users\DELL\Downloads\rawdata.csv s3://vita66/
+          echo "Uploading CSV to S3"
+          aws s3 cp data.csv s3://vita66/
