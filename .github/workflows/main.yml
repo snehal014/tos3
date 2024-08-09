@@ -32,7 +32,6 @@ jobs:
            --stack-name my-s3-stack \
            --capabilities CAPABILITY_NAMED_IAM
 
-
       - name: Check CloudFormation stack status
         run: |
           echo "Checking CloudFormation stack status"
