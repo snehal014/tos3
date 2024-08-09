@@ -82,7 +82,7 @@ Resources:
               cursor = connection.cursor()
 
               # Execute query
-              cursor.execute("SELECT * FROM your_table")
+              cursor.execute("SELECT * FROM data")
               result = cursor.fetchall()
 
               # CSV output
