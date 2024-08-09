@@ -30,7 +30,7 @@ jobs:
           AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
 
       - name: Create CloudFormation stack
-        run: aws cloudformation create-stack --stack-name s3-example --template-body file://template.yaml
+        run: aws cloudformation create-stack --stack-name s3-example --template-body file://template.yaml --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
