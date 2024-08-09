@@ -1,11 +1,12 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CloudFormation template to create S3 bucket and IAM role
+Description: CloudFormation template to create an S3 bucket
 
 Resources:
   S3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: vita66
+      BucketName: my-sql-data-bucket-unique-suffix
+
 
   S3BucketPolicy:
     Type: AWS::S3::BucketPolicy
