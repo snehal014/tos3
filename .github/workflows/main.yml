@@ -1,4 +1,4 @@
-name: Deploy to AWS
+name: Deploy AWS Glue Crawler and Catalog
 
 on:
   push:
@@ -18,39 +18,12 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
+          aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
 
-      - name: Install MySQL client
-        run: sudo apt-get install -y mysql-client
-
-      - name: Create CloudFormation stack
+      - name: Deploy CloudFormation Stack
         run: |
-           echo "Creating CloudFormation stack"
-           aws cloudformation create-stack \
-           --template-body file://template.yaml \
-           --stack-name my-s3-stack \
-           --capabilities CAPABILITY_NAMED_IAM
-
-      - name: Check CloudFormation stack status
-        run: |
-          echo "Checking CloudFormation stack status"
-          aws cloudformation describe-stacks --stack-name my-s3-stack
-
-      - name: Export SQL data to CSV
-        run: |
-          echo "Exporting SQL data to CSV"
-          mysql --host=${{ secrets.DB_HOST }} \
-                --port=${{ secrets.DB_PORT }} \
-                --user=${{ secrets.DB_USER }} \
-                --password=${{ secrets.DB_PASSWORD }} \
-                --database=${{ secrets.DB_NAME }} \
-                --execute="SELECT * FROM data" \
-                --batch --quick \
-                --skip-column-names \
-                --raw > data.csv
-
-      - name: Upload CSV to S3
-        run: |
-          echo "Uploading CSV to S3"
-          aws s3 cp data.csv s3://my-sql-data-bucket-unique-suffix/
+          aws cloudformation deploy \
+            --stack-name glue-crawler-catalog-stack \
+            --template-file cloudformation/crawler-template.yml \
+            --capabilities CAPABILITY_IAM
