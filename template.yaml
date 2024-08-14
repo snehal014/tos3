@@ -1,44 +1,59 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CloudFormation template to create an S3 bucket
+Description: CloudFormation template to create an AWS Glue Crawler and Data Catalog
 
 Resources:
-  S3Bucket:
-    Type: AWS::S3::Bucket
+  GlueCrawlerRole:
+    Type: 'AWS::IAM::Role'
     Properties:
-      BucketName: my-sql-data-bucket-unique-suffix
-
-
-  S3BucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref S3Bucket
-      PolicyDocument:
-        Statement:
-          - Action: 's3:*'
-            Effect: Allow
-            Resource: !Sub 'arn:aws:s3:::${S3Bucket}/*'
-            Principal:
-              AWS: '*'
-    
-  UploadRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: S3UploadRole
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Principal:
-              Service: 
-                - ec2.amazonaws.com
-            Action: sts:AssumeRole
+              Service:
+                - glue.amazonaws.com
+            Action: 'sts:AssumeRole'
       Policies:
-        - PolicyName: S3UploadPolicy
+        - PolicyName: GlueCrawlerPolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
-                Action: 
+                Action:
+                  - 's3:GetObject'
                   - 's3:PutObject'
-                  - 's3:PutObjectAcl'
-                Resource: !Sub 'arn:aws:s3:::${S3Bucket}/*'
+                  - 's3:ListBucket'
+                Resource: 'arn:aws:s3://data24project/part2/*'
+              - Effect: Allow
+                Action:
+                  - 'glue:*'
+                Resource: '*'
+
+  GlueCrawler:
+    Type: 'AWS::Glue::Crawler'
+    Properties:
+      Name: MyGlueCrawler
+      Role: !GetAtt GlueCrawlerRole.Arn
+      DatabaseName: MyGlueDatabase
+      Targets:
+        S3Targets:
+          - Path: 's3://data24project/part2/'
+      TablePrefix: 'my_prefix_'
+      SchemaChangePolicy:
+        UpdateBehavior: UPDATE_IN_DATABASE
+        DeleteBehavior: DEPRECATE_IN_DATABASE
+
+  GlueDatabase:
+    Type: 'AWS::Glue::Database'
+    Properties:
+      DatabaseInput:
+        Name: MyGlueDatabase
+
+Outputs:
+  GlueCrawlerName:
+    Description: "The name of the Glue Crawler"
+    Value: !Ref GlueCrawler
+
+  GlueDatabaseName:
+    Description: "The name of the Glue Database"
+    Value: !Ref GlueDatabase
