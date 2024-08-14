@@ -27,3 +27,6 @@ jobs:
             --stack-name glue-crawler-catalog-stack \
             --template-file template.yaml \
             --capabilities CAPABILITY_IAM
+
+          aws cloudformation describe-stack-events --stack-name glue-crawler-catalog-stack
+
