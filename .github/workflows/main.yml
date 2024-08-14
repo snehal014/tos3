@@ -25,5 +25,5 @@ jobs:
         run: |
           aws cloudformation deploy \
             --stack-name glue-crawler-catalog-stack \
-            --template-file cloudformation/template.yaml \
+            --template-file template.yaml \
             --capabilities CAPABILITY_IAM
